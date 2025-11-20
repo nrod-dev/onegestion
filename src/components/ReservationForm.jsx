@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { dummyDepartamentos } from '../lib/dummyData';
 
 const ReservationForm = () => {
     const navigate = useNavigate();
+    const { id } = useParams(); // Get ID from URL if editing
     const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -35,6 +36,50 @@ const ReservationForm = () => {
         fetchDepartments();
     }, []);
 
+    // Fetch reservation data if editing
+    useEffect(() => {
+        if (id) {
+            const fetchReservation = async () => {
+                setLoading(true);
+                try {
+                    const { data, error } = await supabase
+                        .from('reservas')
+                        .select(`
+                            *,
+                            huespedes (*)
+                        `)
+                        .eq('id', id)
+                        .single();
+
+                    if (error) throw error;
+
+                    if (data) {
+                        setFormData({
+                            departamento_id: data.departamento_id,
+                            fecha_entrada: data.fecha_entrada,
+                            fecha_salida: data.fecha_salida,
+                            nombre: data.huespedes?.nombre || '',
+                            apellido: data.huespedes?.apellido || '',
+                            telefono: data.huespedes?.telefono || '',
+                            localidad: data.huespedes?.localidad || '',
+                            patente_vehiculo: data.huespedes?.patente_vehiculo || '',
+                            estado_pago: data.estado_pago,
+                            monto_total_pagar: data.monto_total_pagar || '',
+                            monto_sena: data.monto_sena || '',
+                            cant_huespedes: data.cant_huespedes || ''
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error fetching reservation:', error);
+                    alert('Error al cargar la reserva');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchReservation();
+        }
+    }, [id]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -45,8 +90,9 @@ const ReservationForm = () => {
         setLoading(true);
 
         try {
-            // 1. Create Guest
-            // For MVP, we always create a new guest. In future, we could search/select.
+            let guestId;
+
+            // 1. Handle Guest (Create or Update)
             const guestData = {
                 nombre: formData.nombre,
                 apellido: formData.apellido,
@@ -55,18 +101,37 @@ const ReservationForm = () => {
                 patente_vehiculo: formData.patente_vehiculo
             };
 
-            const { data: newGuest, error: guestError } = await supabase
-                .from('huespedes')
-                .insert([guestData])
-                .select()
-                .single();
+            if (id) {
+                // If editing, we need to find the guest ID. 
+                // Ideally we should have stored it, but we can fetch it again or assume it's linked.
+                // For simplicity, let's fetch the reservation again to get guest_id if we didn't store it in state.
+                // Actually, let's just query the current reservation to get the guest_id.
+                const { data: currentRes } = await supabase.from('reservas').select('huesped_id').eq('id', id).single();
 
-            if (guestError) throw guestError;
+                if (currentRes) {
+                    guestId = currentRes.huesped_id;
+                    const { error: guestError } = await supabase
+                        .from('huespedes')
+                        .update(guestData)
+                        .eq('id', guestId);
+                    if (guestError) throw guestError;
+                }
+            } else {
+                // Create new guest
+                const { data: newGuest, error: guestError } = await supabase
+                    .from('huespedes')
+                    .insert([guestData])
+                    .select()
+                    .single();
 
-            // 2. Create Reservation
+                if (guestError) throw guestError;
+                guestId = newGuest.id;
+            }
+
+            // 2. Handle Reservation (Create or Update)
             const reservationData = {
                 departamento_id: formData.departamento_id,
-                huesped_id: newGuest.id,
+                huesped_id: guestId,
                 fecha_entrada: formData.fecha_entrada,
                 fecha_salida: formData.fecha_salida,
                 estado_pago: formData.estado_pago,
@@ -75,17 +140,25 @@ const ReservationForm = () => {
                 cant_huespedes: formData.cant_huespedes || null
             };
 
-            const { error: resError } = await supabase
-                .from('reservas')
-                .insert([reservationData]);
+            if (id) {
+                const { error: resError } = await supabase
+                    .from('reservas')
+                    .update(reservationData)
+                    .eq('id', id);
+                if (resError) throw resError;
+                alert('Reserva actualizada correctamente!');
+            } else {
+                const { error: resError } = await supabase
+                    .from('reservas')
+                    .insert([reservationData]);
+                if (resError) throw resError;
+                alert('Reserva creada correctamente!');
+            }
 
-            if (resError) throw resError;
-
-            alert('Reservation created successfully!');
             navigate('/');
         } catch (error) {
-            console.error('Error creating reservation:', error);
-            alert('Error creating reservation: ' + error.message);
+            console.error('Error saving reservation:', error);
+            alert('Error al guardar la reserva: ' + error.message);
         } finally {
             setLoading(false);
         }
@@ -93,7 +166,7 @@ const ReservationForm = () => {
 
     return (
         <div className="bg-white shadow sm:rounded-lg p-6 max-w-2xl mx-auto">
-            <h3 className="text-lg font-medium text-gray-900 mb-6">Nueva Reserva</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-6">{id ? 'Editar Reserva' : 'Nueva Reserva'}</h3>
             <form onSubmit={handleSubmit} className="space-y-6">
 
                 {/* Apartment Selection */}
@@ -316,7 +389,7 @@ const ReservationForm = () => {
                             disabled={loading}
                             className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                         >
-                            {loading ? 'Saving...' : 'Crear Reserva'}
+                            {loading ? 'Guardando...' : (id ? 'Actualizar Reserva' : 'Crear Reserva')}
                         </button>
                     </div>
                 </div>

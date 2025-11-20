@@ -4,7 +4,7 @@ import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import StatusBadge from './StatusBadge';
 
-const ReservationCard = ({ reservation, onClose, onEdit }) => {
+const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
     if (!reservation) return null;
 
     const {
@@ -196,7 +196,18 @@ const ReservationCard = ({ reservation, onClose, onEdit }) => {
                             onClick={() => onEdit && onEdit(reservation)}
                         >
                             <Edit size={16} />
-                            Editar Reserva
+                            Editar
+                        </button>
+                        <button
+                            type="button"
+                            className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-50 text-base font-medium text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm items-center gap-2"
+                            onClick={() => {
+                                if (window.confirm('¿Estás seguro de que deseas eliminar esta reserva?')) {
+                                    onDelete && onDelete(reservation.id);
+                                }
+                            }}
+                        >
+                            Eliminar
                         </button>
                         <button
                             type="button"

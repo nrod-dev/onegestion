@@ -21,6 +21,7 @@ function App() {
               <Route path="/departments" element={<DepartmentList />} />
               <Route path="/availability" element={<AvailabilitySearch />} />
               <Route path="/new-reservation" element={<ReservationForm />} />
+              <Route path="/edit-reservation/:id" element={<ReservationForm />} />
             </Route>
           </Route>
         </Routes>

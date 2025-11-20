@@ -1,23 +1,32 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import StatusBadge from './StatusBadge';
 import ReservationCard from './ReservationCard';
-import { format } from 'date-fns';
-import { Search, Filter, Home, Calendar, ArrowRight } from 'lucide-react';
+import { format, isBefore, startOfDay } from 'date-fns';
+import { Search, Filter, Home, Calendar, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { dummyReservas } from '../lib/dummyData';
 
 const ReservationList = () => {
     const [reservations, setReservations] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(false);
+    const ITEMS_PER_PAGE = 10;
 
     useEffect(() => {
         fetchReservations();
-    }, []);
+    }, [page]);
 
     const fetchReservations = async () => {
+        setLoading(true);
         try {
-            const { data, error } = await supabase
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const from = (page - 1) * ITEMS_PER_PAGE;
+            const to = from + ITEMS_PER_PAGE - 1;
+
+            const { data, error, count } = await supabase
                 .from('reservas')
                 .select(`
           *,
@@ -32,8 +41,10 @@ const ReservationList = () => {
             localidad,
             patente_vehiculo
           )
-        `)
-                .order('fecha_entrada', { ascending: true });
+        `, { count: 'exact' })
+                .gte('fecha_salida', today) // Auto-archive: Only show reservations ending today or in future
+                .order('fecha_entrada', { ascending: true })
+                .range(from, to);
 
             if (error) {
                 console.log('Error fetching reservations:', error);
@@ -41,6 +52,9 @@ const ReservationList = () => {
                 setReservations(dummyReservas);
             } else {
                 setReservations(data || []);
+                // Check if there are more results for the next page
+                // If we got full page of items, assume there might be more, or use count if available
+                setHasMore(count ? (from + data.length < count) : (data.length === ITEMS_PER_PAGE));
             }
         } catch (error) {
             console.error('Error fetching reservations:', error);
@@ -52,7 +66,39 @@ const ReservationList = () => {
 
     const [selectedReservation, setSelectedReservation] = useState(null);
 
-    if (loading) return <div className="text-center py-4">Cargando reservas...</div>;
+    const handlePrevPage = () => {
+        if (page > 1) setPage(p => p - 1);
+    };
+
+    const handleNextPage = () => {
+        if (hasMore) setPage(p => p + 1);
+    };
+
+    const navigate = useNavigate();
+
+    const handleEdit = (reservation) => {
+        navigate(`/edit-reservation/${reservation.id}`);
+    };
+
+    const handleDelete = async (id) => {
+        try {
+            const { error } = await supabase
+                .from('reservas')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            // Refresh list
+            fetchReservations();
+            setSelectedReservation(null);
+        } catch (error) {
+            console.error('Error deleting reservation:', error);
+            alert('Error al eliminar la reserva: ' + error.message);
+        }
+    };
+
+    if (loading && page === 1) return <div className="text-center py-4">Cargando reservas...</div>;
 
     return (
         <>
@@ -213,6 +259,29 @@ const ReservationList = () => {
                         </ul>
                     </div>
                 </div>
+
+                {/* Pagination Controls */}
+                <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                    <button
+                        onClick={handlePrevPage}
+                        disabled={page === 1 || loading}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <ChevronLeft size={16} />
+                        Anterior
+                    </button>
+                    <span className="text-sm text-gray-600">
+                        Página <span className="font-medium text-gray-900">{page}</span>
+                    </span>
+                    <button
+                        onClick={handleNextPage}
+                        disabled={!hasMore || loading}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Siguiente
+                        <ChevronRight size={16} />
+                    </button>
+                </div>
             </div>
 
             {/* Reservation Card Modal */}
@@ -220,10 +289,8 @@ const ReservationList = () => {
                 <ReservationCard
                     reservation={selectedReservation}
                     onClose={() => setSelectedReservation(null)}
-                    onEdit={(res) => {
-                        console.log('Edit reservation:', res);
-                        setSelectedReservation(null);
-                    }}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
                 />
             )}
         </>
