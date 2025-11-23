@@ -105,6 +105,7 @@ const Layout = () => {
                 <div className="flex justify-around items-center h-16">
                     <NavItem to="/" icon={LayoutDashboard} label="Inicio" mobile />
                     <NavItem to="/departments" icon={Building2} label="Depto" mobile />
+                    <NavItem to="/new-reservation" icon={PlusCircle} label="Nueva" mobile />
                     <NavItem to="/availability" icon={CalendarSearch} label="Disp" mobile />
                     <NavItem onClick={handleLogout} icon={LogOut} label="Salir" mobile />
                 </div>

@@ -10,7 +10,7 @@ const StatusBadge = ({ status }) => {
     const labels = {
         pagado: 'Pagado',
         seña: 'Seña',
-        consultado: 'Consultado',
+        consultado: 'Pendiente Pago',
     };
 
     const normalizedStatus = status?.toLowerCase() || 'consultado';

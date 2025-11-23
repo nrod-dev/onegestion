@@ -132,7 +132,7 @@ const ReservationList = () => {
                             <thead className="bg-white">
                                 <tr>
                                     <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                        DEPARTAMENTO / ALOJAMIENTO
+                                        DEPARTAMENTO
                                     </th>
                                     <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                         FECHAS
