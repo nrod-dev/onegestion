@@ -8,20 +8,24 @@ import DepartmentList from './components/DepartmentList';
 import AvailabilitySearch from './components/AvailabilitySearch';
 import ReservationForm from './components/ReservationForm';
 
+import Settings from './components/Settings';
+import ChangeHistory from './components/ChangeHistory';
+
 function App() {
   return (
     <Router>
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
-
           <Route element={<PrivateRoute />}>
             <Route element={<Layout />}>
               <Route path="/" element={<ReservationList />} />
-              <Route path="/departments" element={<DepartmentList />} />
-              <Route path="/availability" element={<AvailabilitySearch />} />
               <Route path="/new-reservation" element={<ReservationForm />} />
               <Route path="/edit-reservation/:id" element={<ReservationForm />} />
+              <Route path="/departments" element={<DepartmentList />} />
+              <Route path="/availability" element={<AvailabilitySearch />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings/history" element={<ChangeHistory />} />
             </Route>
           </Route>
         </Routes>

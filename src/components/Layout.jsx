@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, CalendarSearch, PlusCircle, Building2, LogOut } from 'lucide-react';
+import { LayoutDashboard, CalendarSearch, PlusCircle, Building2, LogOut, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -33,8 +33,8 @@ const NavItem = ({ to, icon: Icon, label, mobile, onClick }) => {
                     ? 'flex-col justify-center w-full h-full py-1 gap-1 text-xs'
                     : 'gap-2 px-4 py-2 rounded-md',
                 isActive
-                    ? 'text-blue-600 font-medium' + (mobile ? '' : ' bg-blue-100')
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? (mobile ? 'text-brand-600 font-medium' : 'bg-brand-800 text-white')
+                    : (mobile ? 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' : 'text-brand-100 hover:bg-brand-800 hover:text-white')
             )}
         >
             <Icon size={mobile ? 24 : 20} />
@@ -53,9 +53,9 @@ const Layout = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-16 sm:pb-0">
+        <div className="min-h-screen bg-slate-50 pb-16 sm:pb-0">
             {/* Top Navigation - Desktop */}
-            <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
+            <nav className="bg-brand-900 border-b border-brand-800 sticky top-0 z-10 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Usamos justify-between para separar izquierda y derecha */}
                     <div className="flex justify-between h-16">
@@ -64,8 +64,20 @@ const Layout = () => {
                         <div className="flex items-center">
                             {/* Logo */}
                             <div className="flex-shrink-0 flex items-center">
-                                <span className="text-xl font-bold text-blue-600">One Gestion</span>
+                                <span className="text-xl font-bold text-white">One Gestion</span>
                             </div>
+
+                            {/* Settings - Moved to Left */}
+                            <div className="hidden sm:flex sm:items-center sm:ml-4">
+                                <Link
+                                    to="/settings"
+                                    className="p-2 text-brand-100 hover:text-white transition-colors"
+                                    title="Configuración"
+                                >
+                                    <Settings size={20} />
+                                </Link>
+                            </div>
+
                             {/* Links (Inicio, Disponibilidad) */}
                             <div className="hidden sm:ml-8 sm:flex sm:space-x-6 items-center">
                                 <NavItem to="/" icon={LayoutDashboard} label="Inicio" />
@@ -76,6 +88,16 @@ const Layout = () => {
 
                         {/* --- DERECHA: Botón de Acción --- */}
                         <div className="flex items-center gap-4">
+                            {/* Mobile Settings Button */}
+                            <div className="sm:hidden flex items-center">
+                                <Link
+                                    to="/settings"
+                                    className="p-2 text-brand-100 hover:text-white transition-colors"
+                                >
+                                    <Settings size={24} />
+                                </Link>
+                            </div>
+
                             <div className="hidden sm:flex sm:items-center">
                                 <NavItem onClick={handleLogout} icon={LogOut} label="Salir" />
                             </div>
@@ -83,7 +105,7 @@ const Layout = () => {
                                 {/* Usamos Link directamente aquí para darle estilo de botón azul */}
                                 <Link
                                     to="/new-reservation"
-                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all"
                                 >
                                     <PlusCircle size={18} className="mr-2" />
                                     Nueva Reserva

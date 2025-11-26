@@ -3,6 +3,7 @@ import { X, Home, Calendar, Phone, MapPin, Car, CreditCard, User, Edit } from 'l
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import StatusBadge from './StatusBadge';
+import { parseDateLocal } from '../lib/utils';
 
 const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
     if (!reservation) return null;
@@ -19,8 +20,8 @@ const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
         cant_huespedes
     } = reservation;
 
-    const checkIn = new Date(fecha_entrada);
-    const checkOut = new Date(fecha_salida);
+    const checkIn = parseDateLocal(fecha_entrada);
+    const checkOut = parseDateLocal(fecha_salida);
     const nights = differenceInDays(checkOut, checkIn);
 
     // Format currency
@@ -34,18 +35,15 @@ const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                {/* Background overlay */}
-                <div
-                    className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                    aria-hidden="true"
-                    onClick={onClose}
-                ></div>
+        <div className="z-50 fixed sm:inset-0 top-16 bottom-16 left-0 right-0" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            {/* Desktop Overlay */}
+            <div className="hidden sm:block fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
 
-                {/* Modal panel */}
-                <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+            {/* Wrapper for positioning */}
+            <div className="h-full w-full sm:flex sm:items-center sm:justify-center sm:min-h-screen sm:pt-4 sm:px-4 sm:pb-20 text-center pointer-events-none">
+
+                {/* Card */}
+                <div className="pointer-events-auto bg-white text-left shadow-xl transform transition-all w-full h-full sm:h-auto sm:max-w-2xl sm:rounded-lg sm:inline-block sm:align-middle overflow-y-auto animate-slide-in-left sm:animate-none">
 
                     {/* Header */}
                     <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-100">
@@ -220,6 +218,7 @@ const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
                 </div>
             </div>
         </div>
+
     );
 };
 

@@ -88,6 +88,37 @@ const ReservationForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('departamentos')
+                .select()
+                .eq('id', formData.departamento_id)
+                .single();
+
+            if (error) throw error;
+
+            if (data) {
+                const { data: reservationData } = await supabase
+                    .from('reservas')
+                    .select('id')
+                    .eq('departamento_id', formData.departamento_id)
+                    .gt('fecha_entrada', formData.fecha_entrada)
+                    .lt('fecha_salida', formData.fecha_salida)
+                    .neq('id', id || -1);
+
+                if (reservationData.id && reservationData.length > 0) {
+                    alert('El departamento está reservado para esta fecha.');
+                    setLoading(false);
+                    return;
+                }
+            }
+
+        } catch (error) {
+            console.error('Error verificando disponibilidad:', error);
+            alert('Ocurrió un error al verificar la disponibilidad.');
+            setLoading(false);
+            return;
+        }
 
         try {
             let guestId;
