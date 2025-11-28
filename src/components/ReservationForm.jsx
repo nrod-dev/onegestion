@@ -89,41 +89,36 @@ const ReservationForm = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            // 1. Check Availability
+            const { data: department, error: deptError } = await supabase
                 .from('departamentos')
                 .select()
                 .eq('id', formData.departamento_id)
                 .single();
 
-            if (error) throw error;
+            if (deptError) throw deptError;
 
-            if (data) {
-                const { data: reservationData } = await supabase
+            if (department) {
+                const { data: reservationData, error: checkError } = await supabase
                     .from('reservas')
                     .select('id')
                     .eq('departamento_id', formData.departamento_id)
-                    .gt('fecha_entrada', formData.fecha_entrada)
-                    .lt('fecha_salida', formData.fecha_salida)
+                    .lt('fecha_entrada', formData.fecha_salida)
+                    .gt('fecha_salida', formData.fecha_entrada)
                     .neq('id', id || -1);
 
-                if (reservationData.id && reservationData.length > 0) {
-                    alert('El departamento está reservado para esta fecha.');
+                if (checkError) throw checkError;
+
+                if (reservationData && reservationData.length > 0) {
+                    alert('El departamento está reservado para esta fecha (o se superpone con otra reserva).');
                     setLoading(false);
                     return;
                 }
             }
 
-        } catch (error) {
-            console.error('Error verificando disponibilidad:', error);
-            alert('Ocurrió un error al verificar la disponibilidad.');
-            setLoading(false);
-            return;
-        }
-
-        try {
             let guestId;
 
-            // 1. Handle Guest (Create or Update)
+            // 2. Handle Guest (Create or Update)
             const guestData = {
                 nombre: formData.nombre,
                 apellido: formData.apellido,
@@ -133,10 +128,6 @@ const ReservationForm = () => {
             };
 
             if (id) {
-                // If editing, we need to find the guest ID. 
-                // Ideally we should have stored it, but we can fetch it again or assume it's linked.
-                // For simplicity, let's fetch the reservation again to get guest_id if we didn't store it in state.
-                // Actually, let's just query the current reservation to get the guest_id.
                 const { data: currentRes } = await supabase.from('reservas').select('huesped_id').eq('id', id).single();
 
                 if (currentRes) {
@@ -148,7 +139,6 @@ const ReservationForm = () => {
                     if (guestError) throw guestError;
                 }
             } else {
-                // Create new guest
                 const { data: newGuest, error: guestError } = await supabase
                     .from('huespedes')
                     .insert([guestData])
@@ -159,7 +149,7 @@ const ReservationForm = () => {
                 guestId = newGuest.id;
             }
 
-            // 2. Handle Reservation (Create or Update)
+            // 3. Handle Reservation (Create or Update)
             const reservationData = {
                 departamento_id: formData.departamento_id,
                 huesped_id: guestId,
