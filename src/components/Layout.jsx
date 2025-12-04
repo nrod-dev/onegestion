@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, CalendarSearch, PlusCircle, Building2, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, CalendarSearch, PlusCircle, Building2, LogOut, Settings, Menu, X, Users } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -46,19 +47,87 @@ const NavItem = ({ to, icon: Icon, label, mobile, onClick }) => {
 const Layout = () => {
     const { signOut } = useAuth();
     const navigate = useNavigate();
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     const handleLogout = async () => {
         await signOut();
         navigate('/login');
     };
 
+    const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
+
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col sm:flex-row">
+            {/* Mobile Header */}
+            <header className="sm:hidden fixed top-0 left-0 right-0 h-16 bg-brand-900 z-40 flex items-center justify-between px-4 shadow-md">
+                <button onClick={toggleDrawer} className="text-white p-2">
+                    <Menu size={24} />
+                </button>
+                <h1 className="text-white text-lg font-bold tracking-tight absolute left-1/2 transform -translate-x-1/2">
+                    One Gestión
+                </h1>
+                <div className="w-10"></div> {/* Spacer for centering */}
+            </header>
+
+            {/* Mobile Drawer */}
+            <div className={clsx(
+                "sm:hidden fixed inset-0 z-50 flex transition-all duration-300",
+                isDrawerOpen ? "visible pointer-events-auto" : "invisible pointer-events-none delay-300"
+            )}>
+                {/* Backdrop */}
+                <div
+                    className={clsx(
+                        "fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-out",
+                        isDrawerOpen ? "opacity-100" : "opacity-0"
+                    )}
+                    onClick={() => setIsDrawerOpen(false)}
+                />
+
+                {/* Drawer Content */}
+                <div className={clsx(
+                    "relative w-64 bg-white h-full shadow-xl flex flex-col transition-transform duration-300 ease-out",
+                    isDrawerOpen ? "translate-x-0" : "-translate-x-full"
+                )}>
+                    <div className="h-16 bg-brand-900 flex items-center px-6 justify-between">
+                        <span className="text-xl font-bold text-white tracking-tight">Menu</span>
+                        <button onClick={() => setIsDrawerOpen(false)} className="text-brand-100 hover:text-white">
+                            <X size={24} />
+                        </button>
+                    </div>
+
+                    <div className="flex-1 py-6 px-4 flex flex-col gap-2">
+                        <button className="flex items-center w-full gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+                            <Users size={20} className="text-brand-600" />
+                            <span className="font-medium">Lista de Huespedes</span>
+                        </button>
+
+                        <Link
+                            to="/settings"
+                            onClick={() => setIsDrawerOpen(false)}
+                            className="flex items-center w-full gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                            <Settings size={20} className="text-brand-600" />
+                            <span className="font-medium">Configuración</span>
+                        </Link>
+                    </div>
+
+                    <div className="p-4 border-t border-gray-200">
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center w-full gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                            <LogOut size={20} />
+                            <span className="font-medium">Cerrar Sesión</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             {/* Sidebar - Desktop */}
             <aside className="hidden sm:flex sm:flex-col w-64 bg-brand-900 border-r border-brand-800 fixed inset-y-0 left-0 z-30">
                 {/* Logo */}
                 <div className="flex items-center h-16 px-6 border-b border-brand-800">
-                    <span className="text-xl font-bold text-white tracking-tight">One Gestion</span>
+                    <span className="text-xl font-bold text-white tracking-tight">One Gestión</span>
                 </div>
 
                 {/* Nav Links */}
@@ -82,7 +151,7 @@ const Layout = () => {
             </aside>
 
             {/* Main Content Wrapper */}
-            <div className="flex-1 flex flex-col sm:ml-64 min-h-screen transition-all duration-300">
+            <div className="flex-1 flex flex-col sm:ml-64 min-h-screen transition-all duration-300 pt-16 sm:pt-0">
                 {/* Top Header - Desktop */}
                 <header className="hidden sm:flex items-center justify-end h-16 px-8 bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
                     <Link
@@ -101,13 +170,12 @@ const Layout = () => {
             </div>
 
             {/* Bottom Navigation - Mobile */}
-            <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-safe">
+            <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30 pb-safe">
                 <div className="flex justify-around items-center h-16">
                     <NavItem to="/" icon={LayoutDashboard} label="Inicio" mobile />
                     <NavItem to="/departments" icon={Building2} label="Depto" mobile />
                     <NavItem to="/new-reservation" icon={PlusCircle} label="Nueva" mobile />
                     <NavItem to="/availability" icon={CalendarSearch} label="Disp" mobile />
-                    <NavItem onClick={handleLogout} icon={LogOut} label="Salir" mobile />
                 </div>
             </div>
         </div>
