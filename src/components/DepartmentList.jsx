@@ -199,7 +199,7 @@ const DepartmentDetailModal = ({ department, onClose }) => {
                                             <div
                                                 key={day.toString()}
                                                 className={`h-10 flex items-center justify-center text-sm ${reserved
-                                                    ? 'bg-red-100 text-red-700 font-medium'
+                                                    ? 'bg-red-300 text-red-700 font-medium'
                                                     : 'bg-white text-gray-900'
                                                     }`}
                                             >

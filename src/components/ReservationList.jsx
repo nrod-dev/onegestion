@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import StatusBadge from './StatusBadge';
 import ReservationCard from './ReservationCard';
 import { format, differenceInDays } from 'date-fns';
-import { Search, Home, Calendar, ArrowRight, ChevronLeft, ChevronRight, User, Building2 } from 'lucide-react';
+import { Search, Calendar, ArrowRight, ChevronLeft, ChevronRight, User, Building2, Filter, X } from 'lucide-react';
 
 import { dummyReservas } from '../lib/dummyData';
 import { parseDateLocal } from '../lib/utils';
@@ -14,27 +14,20 @@ const ReservationList = () => {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
-    const [activeTab, setActiveTab] = useState('activas');
     const [selectedReservation, setSelectedReservation] = useState(null);
+    const [showFilters, setShowFilters] = useState(false);
+    const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
     const ITEMS_PER_PAGE = 10;
 
     const navigate = useNavigate();
 
     useEffect(() => {
-        setPage(1); // Reset page on tab change
-        fetchReservations(1);
-    }, [activeTab]);
-
-    useEffect(() => {
-        if (page > 1) {
-            fetchReservations(page);
-        }
-    }, [page]);
+        fetchReservations(page);
+    }, [page, dateFilter]);
 
     const fetchReservations = async (currentPage) => {
         setLoading(true);
         try {
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
             const from = (currentPage - 1) * ITEMS_PER_PAGE;
             const to = from + ITEMS_PER_PAGE - 1;
 
@@ -55,21 +48,16 @@ const ReservationList = () => {
           )
         `, { count: 'exact' });
 
-            // Apply filters based on activeTab
-            if (activeTab === 'activas') {
-                query = query.gte('fecha_salida', today);
-            } else if (activeTab === 'pasadas') {
-                query = query.lt('fecha_salida', today);
-            } else if (activeTab === 'senadas') {
-                query = query.gte('fecha_salida', today).eq('estado_pago', 'seña');
+            // Apply date filters if they exist
+            if (dateFilter.start) {
+                query = query.gte('fecha_entrada', dateFilter.start);
+            }
+            if (dateFilter.end) {
+                query = query.lte('fecha_entrada', dateFilter.end);
             }
 
-            // Order by date
-            if (activeTab === 'pasadas') {
-                query = query.order('fecha_entrada', { ascending: false });
-            } else {
-                query = query.order('fecha_entrada', { ascending: true });
-            }
+            // Always order by fecha_entrada descending (newest first)
+            query = query.order('fecha_entrada', { ascending: false });
 
             const { data, error, count } = await query.range(from, to);
 
@@ -80,7 +68,9 @@ const ReservationList = () => {
                 if (currentPage === 1) {
                     setReservations(data || []);
                 } else {
-                    setReservations(prev => [...prev, ...(data || [])]);
+                    // If it's a new page, append. But if filters changed, we should have reset page to 1
+                    // so this logic holds.
+                    setReservations(data || []);
                 }
                 setHasMore(count ? (from + data.length < count) : (data.length === ITEMS_PER_PAGE));
             }
@@ -90,6 +80,17 @@ const ReservationList = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDateFilterChange = (e) => {
+        const { name, value } = e.target;
+        setDateFilter(prev => ({ ...prev, [name]: value }));
+        setPage(1);
+    };
+
+    const clearFilters = () => {
+        setDateFilter({ start: '', end: '' });
+        setPage(1);
     };
 
     const handlePrevPage = () => {
@@ -122,51 +123,61 @@ const ReservationList = () => {
         }
     };
 
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('es-AR', {
-            style: 'currency',
-            currency: 'ARS',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(amount || 0);
-    };
-
-    const tabs = [
-        { id: 'activas', label: 'Activas' },
-        { id: 'pasadas', label: 'Pasadas' },
-        { id: 'senadas', label: 'Señadas' },
-        // { id: 'pendientes', label: 'Pendientes' } // Optional based on image, but sticking to request
-    ];
-
     return (
         <>
             <div className="space-y-6">
-                {/* Header & Tabs */}
+                {/* Header & Filters */}
                 <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-2xl font-bold text-slate-900">Mis Reservas</h3>
-                        <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                            {reservations.length}
-                        </span>
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-2xl font-bold text-slate-900">Mis Reservas</h3>
+                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                                {reservations.length}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`p-2 rounded-lg transition-colors ${showFilters ? 'bg-brand-100 text-brand-600' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+                        >
+                            <Filter size={20} />
+                        </button>
                     </div>
 
-                    {/* Tabs */}
-                    <div className="flex space-x-2 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`
-                                    whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors
-                                    ${activeTab === tab.id
-                                        ? 'bg-brand-600 text-white shadow-sm'
-                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}
-                                `}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
+                    {/* Filter Panel */}
+                    {showFilters && (
+                        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2">
+                            <div className="flex flex-col sm:flex-row gap-4 items-end">
+                                <div className="w-full sm:w-auto">
+                                    <label className="block text-xs font-medium text-slate-500 mb-1">Desde</label>
+                                    <input
+                                        type="date"
+                                        name="start"
+                                        value={dateFilter.start}
+                                        onChange={handleDateFilterChange}
+                                        className="w-full sm:w-40 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                                    />
+                                </div>
+                                <div className="w-full sm:w-auto">
+                                    <label className="block text-xs font-medium text-slate-500 mb-1">Hasta</label>
+                                    <input
+                                        type="date"
+                                        name="end"
+                                        value={dateFilter.end}
+                                        onChange={handleDateFilterChange}
+                                        className="w-full sm:w-40 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                                    />
+                                </div>
+                                {(dateFilter.start || dateFilter.end) && (
+                                    <button
+                                        onClick={clearFilters}
+                                        className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                                    >
+                                        Limpiar filtros
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Reservation List */}
@@ -177,7 +188,12 @@ const ReservationList = () => {
                         <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
                             <div className="flex flex-col items-center justify-center gap-2">
                                 <Search size={32} className="text-slate-300" />
-                                <p className="text-slate-500">No hay reservas en esta sección.</p>
+                                <p className="text-slate-500">No se encontraron reservas.</p>
+                                {(dateFilter.start || dateFilter.end) && (
+                                    <button onClick={clearFilters} className="text-brand-600 text-sm hover:underline">
+                                        Limpiar filtros
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ) : (
