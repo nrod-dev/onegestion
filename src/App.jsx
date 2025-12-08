@@ -7,6 +7,7 @@ import ReservationList from './components/ReservationList';
 import DepartmentList from './components/DepartmentList';
 import AvailabilitySearch from './components/AvailabilitySearch';
 import ReservationForm from './components/ReservationForm';
+import GuestList from './components/GuestList';
 
 import Settings from './components/Settings';
 import ChangeHistory from './components/ChangeHistory';
@@ -26,6 +27,7 @@ function App() {
               <Route path="/availability" element={<AvailabilitySearch />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/history" element={<ChangeHistory />} />
+              <Route path="/guests" element={<GuestList />} />
             </Route>
           </Route>
         </Routes>

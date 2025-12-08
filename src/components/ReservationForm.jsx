@@ -13,6 +13,7 @@ const ReservationForm = () => {
         fecha_entrada: '',
         fecha_salida: '',
         nombre: '',
+        dni: '',
         apellido: '',
         telefono: '',
         localidad: '',
@@ -59,6 +60,7 @@ const ReservationForm = () => {
                             fecha_entrada: data.fecha_entrada,
                             fecha_salida: data.fecha_salida,
                             nombre: data.huespedes?.nombre || '',
+                            dni: data.huespedes?.dni || '',
                             apellido: data.huespedes?.apellido || '',
                             telefono: data.huespedes?.telefono || '',
                             localidad: data.huespedes?.localidad || '',
@@ -121,6 +123,7 @@ const ReservationForm = () => {
             // 2. Handle Guest (Create or Update)
             const guestData = {
                 nombre: formData.nombre,
+                dni: formData.dni,
                 apellido: formData.apellido,
                 telefono: formData.telefono,
                 localidad: formData.localidad,
@@ -249,6 +252,22 @@ const ReservationForm = () => {
                 <div className="border-t border-gray-200 pt-6">
                     <h4 className="text-md font-medium text-gray-900 mb-4">Detalles del huesped</h4>
                     <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                        {/* DNI Field */}
+                        <div>
+                            <label htmlFor="dni" className="block text-sm font-medium text-gray-700">
+                                DNI
+                            </label>
+                            <input
+                                type="text"
+                                name="dni"
+                                id="dni"
+                                required
+                                value={formData.dni}
+                                onChange={handleChange}
+                                className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+
                         <div>
                             <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
                                 Nombre

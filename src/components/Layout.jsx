@@ -96,10 +96,14 @@ const Layout = () => {
                     </div>
 
                     <div className="flex-1 py-6 px-4 flex flex-col gap-2">
-                        <button className="flex items-center w-full gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+                        <Link
+                            to="/guests"
+                            onClick={() => setIsDrawerOpen(false)}
+                            className="flex items-center w-full gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
                             <Users size={20} className="text-brand-600" />
                             <span className="font-medium">Lista de Huespedes</span>
-                        </button>
+                        </Link>
 
                         <Link
                             to="/settings"
@@ -139,6 +143,7 @@ const Layout = () => {
 
                 {/* Bottom Sidebar Items */}
                 <div className="p-3 border-t border-brand-800 gap-1 flex flex-col bg-brand-900">
+                    <NavItem to="/guests" icon={Users} label="Lista de Huespedes" />
                     <Link
                         to="/settings"
                         className="flex items-center w-full gap-3 px-4 py-3 rounded-lg text-brand-100 hover:bg-brand-800 hover:text-white transition-colors"
