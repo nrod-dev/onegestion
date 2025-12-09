@@ -118,9 +118,45 @@ const ReservationForm = () => {
                 }
             }
 
+            // 2. Handle Guest (Find, Create or Update)
             let guestId;
 
-            // 2. Handle Guest (Create or Update)
+            const findOrCreateHuesped = async (guestData) => {
+                // Paso 1: Buscar Huésped Existente
+                let query = supabase.from('huespedes').select('id');
+
+                if (guestData.dni) {
+                    query = query.eq('dni', guestData.dni);
+                } else {
+                    // Si el dni no está presente (aunque es required en el form), buscar por nombre y apellido
+                    query = query
+                        .ilike('nombre', guestData.nombre)
+                        .ilike('apellido', guestData.apellido);
+                }
+
+                const { data: existingGuest, error: searchError } = await query.maybeSingle();
+
+                if (searchError) {
+                    // Si hay error en la búsqueda (diferente a "no encontrado"), lanzar error
+                    throw searchError;
+                }
+
+                // Paso 2: Retornar ID si existe
+                if (existingGuest) {
+                    return existingGuest.id;
+                }
+
+                // Paso 3: Crear Nuevo Huésped (si no existe)
+                const { data: newGuest, error: createError } = await supabase
+                    .from('huespedes')
+                    .insert([guestData])
+                    .select('id')
+                    .single();
+
+                if (createError) throw createError;
+                return newGuest.id;
+            };
+
             const guestData = {
                 nombre: formData.nombre,
                 dni: formData.dni,
@@ -131,10 +167,12 @@ const ReservationForm = () => {
             };
 
             if (id) {
+                // Si estamos editando una reserva existente
                 const { data: currentRes } = await supabase.from('reservas').select('huesped_id').eq('id', id).single();
 
                 if (currentRes) {
                     guestId = currentRes.huesped_id;
+                    // Actualizamos los datos del huésped existente
                     const { error: guestError } = await supabase
                         .from('huespedes')
                         .update(guestData)
@@ -142,14 +180,8 @@ const ReservationForm = () => {
                     if (guestError) throw guestError;
                 }
             } else {
-                const { data: newGuest, error: guestError } = await supabase
-                    .from('huespedes')
-                    .insert([guestData])
-                    .select()
-                    .single();
-
-                if (guestError) throw guestError;
-                guestId = newGuest.id;
+                // Nueva Reserva
+                guestId = await findOrCreateHuesped(guestData);
             }
 
             // 3. Handle Reservation (Create or Update)
