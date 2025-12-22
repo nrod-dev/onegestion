@@ -35,7 +35,7 @@ const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
     };
 
     return (
-        <div className="z-50 fixed sm:inset-0 top-16 bottom-16 left-0 right-0" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div className="z-50 fixed sm:inset-0 top-16 bottom-0 left-0 right-0" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             {/* Desktop Overlay */}
             <div className="hidden sm:block fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
 
