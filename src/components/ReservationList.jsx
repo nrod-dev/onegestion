@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import StatusBadge from './StatusBadge';
 import ReservationCard from './ReservationCard';
 import { format, differenceInDays } from 'date-fns';
-import { Search, Calendar, ArrowRight, ChevronLeft, ChevronRight, User, Building2, Filter, X } from 'lucide-react';
+import { Search, Calendar, ArrowRight, ChevronLeft, ChevronRight, User, Building2, Filter, X, Clock } from 'lucide-react';
 
 import { dummyReservas } from '../lib/dummyData';
 import { parseDateLocal } from '../lib/utils';
@@ -16,6 +16,7 @@ const ReservationList = () => {
     const [hasMore, setHasMore] = useState(false);
     const [selectedReservation, setSelectedReservation] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
+    const [upcomingFilter, setUpcomingFilter] = useState(false);
     const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
     const ITEMS_PER_PAGE = 10;
 
@@ -23,7 +24,7 @@ const ReservationList = () => {
 
     useEffect(() => {
         fetchReservations(page);
-    }, [page, dateFilter]);
+    }, [page, dateFilter, upcomingFilter]);
 
     const fetchReservations = async (currentPage) => {
         setLoading(true);
@@ -56,8 +57,22 @@ const ReservationList = () => {
                 query = query.lte('fecha_entrada', dateFilter.end);
             }
 
-            // Always order by fecha_entrada descending (newest first)
-            query = query.order('fecha_entrada', { ascending: false });
+
+            // Logic for "Upcoming" filter vs Default
+            if (upcomingFilter) {
+                // Upcoming: Entry date > Today (starts tomorrow or later, basically not currently in progress/today)
+                // Request was: "reservas de fecha de entrada proxima pero que no esten en progreso"
+                // e.g. check-in > now()
+                const today = new Date().toISOString().split('T')[0];
+                query = query.gt('fecha_entrada', today);
+
+                // Sort by Nearest date first
+                query = query.order('fecha_entrada', { ascending: true });
+            } else {
+                // Default: Rollback to Sort by Created At (Newest first)
+                // "por defecto quiero que me las ordenes por la fecha de creacion de las mas recientes creadas a las mas antiguas"
+                query = query.order('created_at', { ascending: false });
+            }
 
             const { data, error, count } = await query.range(from, to);
 
@@ -135,12 +150,22 @@ const ReservationList = () => {
                                 {reservations.length}
                             </span>
                         </div>
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`p-2 rounded-lg transition-colors ${showFilters ? 'bg-brand-100 text-brand-600' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
-                        >
-                            <Filter size={20} />
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setUpcomingFilter(!upcomingFilter)}
+                                title="Ver próximas reservas"
+                                className={`p-2 rounded-lg transition-colors flex items-center gap-2 ${upcomingFilter ? 'bg-indigo-100 text-indigo-700 font-medium' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+                            >
+                                <Clock size={20} /> <span className="text-sm">Ver próximas reservas</span>
+                                {upcomingFilter}
+                            </button>
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`p-2 rounded-lg transition-colors ${showFilters ? 'bg-brand-100 text-brand-600' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+                            >
+                                <Filter size={20} />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Filter Panel */}
