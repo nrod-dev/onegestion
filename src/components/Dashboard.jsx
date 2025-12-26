@@ -78,7 +78,7 @@ const Dashboard = () => {
     }, [departments, reservations, currentDate]);
 
     return (
-        <div className="space-y-6 pb-20"> {/* pb-20 for bottom nav space */}
+        <div className="flex flex-col gap-6 h-[calc(100vh-140px)] sm:h-auto pb-4">
             <div className="flex flex-col gap-4">
                 <MonthSelector
                     currentDate={currentDate}
@@ -89,7 +89,7 @@ const Dashboard = () => {
             </div>
 
             {loading ? (
-                <div className="flex items-center justify-center p-12 bg-white rounded-2xl border border-slate-200">
+                <div className="flex items-center justify-center flex-1 bg-white rounded-2xl border border-slate-200">
                     <div className="text-slate-400 animate-pulse">Cargando disponibilidad...</div>
                 </div>
             ) : (
@@ -97,6 +97,7 @@ const Dashboard = () => {
                     currentDate={currentDate}
                     departments={departments}
                     reservations={reservations}
+                    className="flex-1 min-h-0"
                 />
             )}
         </div>

@@ -66,7 +66,7 @@ const OccupancyMatrix = ({ currentDate, departments, reservations }) => {
                 </div>
             </div>
 
-            <div className="overflow-x-auto relative">
+            <div className="overflow-x-auto relative pb-4">
                 <div className="inline-block min-w-full align-middle">
                     <table className="min-w-full border-collapse">
                         <thead>
