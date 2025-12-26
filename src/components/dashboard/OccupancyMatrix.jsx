@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { format, getDaysInMonth, getDate, isSameDay, parseISO } from 'date-fns';
 
-const OccupancyMatrix = ({ currentDate, departments, reservations }) => {
+const OccupancyMatrix = ({ currentDate, departments, reservations, className = '' }) => {
     const daysInMonth = useMemo(() => {
         const daysCount = getDaysInMonth(currentDate);
         return Array.from({ length: daysCount }, (_, i) => i + 1);
@@ -50,18 +50,29 @@ const OccupancyMatrix = ({ currentDate, departments, reservations }) => {
         return map;
     }, [currentDate, reservations]);
 
+    // Calculate totals
+    const totalSlots = departments.length * daysInMonth.length;
+    const occupiedSlots = occupancyMap.size;
+    const freeSlots = totalSlots - occupiedSlots;
+
     return (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col ${className}`}>
             <div className="p-4 border-b border-slate-100 bg-white sticky top-0 z-10">
-                <h3 className="font-bold text-lg text-slate-900">Disponibilidad</h3>
-                <div className="flex items-center gap-4 mt-2 text-sm">
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-brand-500"></div>
-                        <span className="text-slate-600">Ocupado</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-slate-100 border border-slate-200"></div>
-                        <span className="text-slate-600">Libre</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h3 className="font-bold text-lg text-slate-900">Ocupación por unidad</h3>
+                    <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 rounded-full bg-brand-500"></div>
+                            <span className="text-slate-600">
+                                Ocupado <span className="font-semibold text-slate-900">({occupiedSlots})</span>
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 rounded-full bg-slate-100 border border-slate-200"></div>
+                            <span className="text-slate-600">
+                                Libre <span className="font-semibold text-slate-900">({freeSlots})</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
