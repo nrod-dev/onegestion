@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, CalendarSearch, PlusCircle, Building2, LogOut, Settings, Menu, X, Users } from 'lucide-react';
+import { LayoutDashboard, CalendarSearch, PlusCircle, Building2, LogOut, Settings, Menu, X, Users, CalendarDays, Home } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -136,7 +136,8 @@ const Layout = () => {
 
                 {/* Nav Links */}
                 <div className="flex-1 flex flex-col px-3 py-6 gap-1 overflow-y-auto">
-                    <NavItem to="/" icon={LayoutDashboard} label="Inicio" />
+                    <NavItem to="/" icon={Home} label="Inicio" />
+                    <NavItem to="/reservations" icon={CalendarDays} label="Reservas" />
                     <NavItem to="/departments" icon={Building2} label="Departamentos" />
                     <NavItem to="/availability" icon={CalendarSearch} label="Disponibilidad" />
                 </div>
@@ -177,9 +178,10 @@ const Layout = () => {
             {/* Bottom Navigation - Mobile */}
             <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30 pb-safe">
                 <div className="flex justify-around items-center h-16">
-                    <NavItem to="/" icon={LayoutDashboard} label="Inicio" mobile />
-                    <NavItem to="/departments" icon={Building2} label="Depto" mobile />
+                    <NavItem to="/" icon={Home} label="Inicio" mobile />
+                    <NavItem to="/reservations" icon={CalendarDays} label="Reservas" mobile />
                     <NavItem to="/new-reservation" icon={PlusCircle} label="Nueva" mobile />
+                    <NavItem to="/departments" icon={Building2} label="Depto" mobile />
                     <NavItem to="/availability" icon={CalendarSearch} label="Disp" mobile />
                 </div>
             </div>

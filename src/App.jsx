@@ -4,6 +4,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Login from './components/Login';
 import Layout from './components/Layout';
 import ReservationList from './components/ReservationList';
+import Dashboard from './components/Dashboard';
 import DepartmentList from './components/DepartmentList';
 import AvailabilitySearch from './components/AvailabilitySearch';
 import ReservationForm from './components/ReservationForm';
@@ -20,7 +21,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route element={<PrivateRoute />}>
             <Route element={<Layout />}>
-              <Route path="/" element={<ReservationList />} />
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/reservations" element={<ReservationList />} />
               <Route path="/new-reservation" element={<ReservationForm />} />
               <Route path="/edit-reservation/:id" element={<ReservationForm />} />
               <Route path="/departments" element={<DepartmentList />} />
