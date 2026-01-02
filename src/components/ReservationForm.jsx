@@ -122,13 +122,35 @@ const ReservationForm = () => {
             let guestId;
 
             const findOrCreateHuesped = async (guestData) => {
+                // Determine if we have enough info to search/create a specific guest
+                const hasIdentityInfo = guestData.dni || (guestData.nombre && guestData.apellido);
+
+                if (!hasIdentityInfo) {
+                    // Create a placeholder guest
+                    const placeholderData = {
+                        ...guestData,
+                        nombre: guestData.nombre || 'Huesped',
+                        apellido: guestData.apellido || 'Provisorio',
+                        dni: guestData.dni || `PROV-${Date.now()}` // Generate unique temp DNI
+                    };
+
+                    const { data: newGuest, error: createError } = await supabase
+                        .from('huespedes')
+                        .insert([placeholderData])
+                        .select('id')
+                        .single();
+
+                    if (createError) throw createError;
+                    return newGuest.id;
+                }
+
                 // Paso 1: Buscar Huésped Existente
                 let query = supabase.from('huespedes').select('id');
 
                 if (guestData.dni) {
                     query = query.eq('dni', guestData.dni);
-                } else {
-                    // Si el dni no está presente (aunque es required en el form), buscar por nombre y apellido
+                } else if (guestData.nombre && guestData.apellido) {
+                    // Solo buscar por nombre si hay nombre y apellido pero no DNI
                     query = query
                         .ilike('nombre', guestData.nombre)
                         .ilike('apellido', guestData.apellido);
@@ -147,9 +169,15 @@ const ReservationForm = () => {
                 }
 
                 // Paso 3: Crear Nuevo Huésped (si no existe)
+                // Usar placeholder DNI si no se proveyó uno pero sí nombre/apellido
+                const finalGuestData = {
+                    ...guestData,
+                    dni: guestData.dni || `PROV-${Date.now()}`
+                };
+
                 const { data: newGuest, error: createError } = await supabase
                     .from('huespedes')
-                    .insert([guestData])
+                    .insert([finalGuestData])
                     .select('id')
                     .single();
 
@@ -293,7 +321,6 @@ const ReservationForm = () => {
                                 type="text"
                                 name="dni"
                                 id="dni"
-                                required
                                 value={formData.dni}
                                 onChange={handleChange}
                                 className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border focus:ring-blue-500 focus:border-blue-500"
@@ -308,7 +335,6 @@ const ReservationForm = () => {
                                 type="text"
                                 name="nombre"
                                 id="nombre"
-                                required
                                 value={formData.nombre}
                                 onChange={handleChange}
                                 className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border focus:ring-blue-500 focus:border-blue-500"
@@ -323,7 +349,6 @@ const ReservationForm = () => {
                                 type="text"
                                 name="apellido"
                                 id="apellido"
-                                required
                                 value={formData.apellido}
                                 onChange={handleChange}
                                 className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border focus:ring-blue-500 focus:border-blue-500"
