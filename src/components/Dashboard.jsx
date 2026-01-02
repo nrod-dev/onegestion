@@ -78,7 +78,7 @@ const Dashboard = () => {
     }, [departments, reservations, currentDate]);
 
     return (
-        <div className="flex flex-col gap-6 h-[calc(100vh-140px)] sm:h-auto pb-4">
+        <div className="flex flex-col gap-2 md:gap-6 min-h-[calc(100dvh-100px)] h-auto pb-4">
             <div className="flex flex-col gap-4">
                 <MonthSelector
                     currentDate={currentDate}

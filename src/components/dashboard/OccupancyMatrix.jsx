@@ -57,7 +57,7 @@ const OccupancyMatrix = ({ currentDate, departments, reservations, className = '
 
     return (
         <div className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col ${className}`}>
-            <div className="p-4 border-b border-slate-100 bg-white sticky top-0 z-10">
+            <div className="p-4 border-b border-slate-100 bg-white sticky top-0 z-40">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h3 className="font-bold text-lg text-slate-900">Ocupación por unidad</h3>
                     <div className="flex items-center gap-4 text-sm">
@@ -75,27 +75,41 @@ const OccupancyMatrix = ({ currentDate, departments, reservations, className = '
                         </div>
                     </div>
                 </div>
+                {/* Fixed Header Label */}
+                <div className="mt-4 pl-[60px] text-center text-[10px] uppercase tracking-wider font-semibold text-slate-400 hidden sm:block">
+                    Días del mes
+                </div>
+                {/* Mobile version could just be centered or hidden if space is tight, but user asked for it. 
+                   Let's make it visible always as requested, adjusting padding/margin. 
+                   Actually, user said "el header que dice Dias del mes este fijo".
+                */}
+                <div className="mt-4 pl-[60px] text-center text-[10px] uppercase tracking-wider font-semibold text-slate-400 sm:hidden">
+                    Días del mes
+                </div>
             </div>
 
             <div className="overflow-x-auto relative pb-4">
-                <div className="inline-block min-w-full align-middle">
-                    <table className="min-w-full border-collapse">
+                <div className="inline-block min-w-full align-middle h-full">
+                    <table className="min-w-full border-collapse h-full">
                         <thead>
                             <tr>
-                                <th className="sticky left-0 z-20 bg-white border-r border-slate-200 p-1 min-w-[60px] h-8 w-14"></th>
-                                <th colSpan={daysInMonth.length} className="text-center text-[10px] uppercase tracking-wider font-semibold text-slate-400 bg-white border-b border-slate-100 h-8">
-                                    Días del mes
-                                </th>
-                            </tr>
-                            <tr>
-                                <th className="sticky left-0 z-20 bg-white border-b border-r border-slate-200 p-1 min-w-[60px] text-center text-[10px] font-semibold text-slate-500 uppercase tracking-wider h-10 w-14">
+                                <th className="sticky top-0 left-0 z-30 bg-white border-b border-r border-slate-200 p-1 min-w-[60px] text-center text-[10px] font-semibold text-slate-500 uppercase tracking-wider h-10 w-14">
                                     Unidad
                                 </th>
-                                {daysInMonth.map(day => (
-                                    <th key={day} className="border-b border-slate-100 p-0.5 min-w-[28px] text-center text-[10px] font-medium text-slate-400 h-10">
-                                        {day}
-                                    </th>
-                                ))}
+                                {daysInMonth.map(day => {
+                                    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                                    const feedbackIndex = date.getDay(); // 0 is Sunday
+                                    const daysOfWeek = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+
+                                    return (
+                                        <th key={day} className="sticky top-0 z-20 bg-white border-b border-slate-100 p-0.5 min-w-[28px] text-center text-[10px] font-medium text-slate-400 h-10">
+                                            <div className="flex flex-col items-center justify-center gap-0.5">
+                                                <span className="leading-none">{daysOfWeek[feedbackIndex]}</span>
+                                                <span className="leading-none">{day}</span>
+                                            </div>
+                                        </th>
+                                    );
+                                })}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
