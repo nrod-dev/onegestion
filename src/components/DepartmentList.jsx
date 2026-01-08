@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Building2, Users, ChevronRight, Calendar as CalendarIcon, PlusCircle, X } from 'lucide-react';
-import { format, isWithinInterval, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 
@@ -25,7 +25,7 @@ const DepartmentList = () => {
             if (deptError) throw deptError;
 
             // Fetch active reservations to determine status
-            const today = new Date().toISOString().split('T')[0];
+            const today = format(new Date(), 'yyyy-MM-dd');
             const { data: reservations, error: resError } = await supabase
                 .from('reservas')
                 .select('departamento_id, fecha_entrada, fecha_salida')

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Calendar } from 'lucide-react';
-import { format, addMonths, subMonths, startOfMonth } from 'date-fns';
+import { format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const MonthSelector = ({ currentDate, onDateChange }) => {

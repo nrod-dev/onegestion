@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { format, startOfMonth, endOfMonth, getDaysInMonth, addDays } from 'date-fns';
+import { format, startOfMonth, endOfMonth, getDaysInMonth } from 'date-fns';
 import MonthSelector from './dashboard/MonthSelector';
 import OccupancyPercentage from './dashboard/OccupancyPercentage';
 import OccupancyMatrix from './dashboard/OccupancyMatrix';
@@ -12,41 +12,41 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // 1. Fetch Departments
+                const { data: depts, error: deptError } = await supabase
+                    .from('departamentos')
+                    .select('id, nombre')
+                    .order('nombre');
+
+                if (deptError) throw deptError;
+
+                // 2. Fetch Reservations for the selected month
+                // We need reservations that overlap with the month range.
+                // Overlap logic: (Start <= EndOfMonth) AND (End >= StartOfMonth)
+                const startStr = format(startOfMonth(currentDate), 'yyyy-MM-dd');
+                const endStr = format(endOfMonth(currentDate), 'yyyy-MM-dd');
+
+                const { data: resData, error: resError } = await supabase
+                    .from('reservas')
+                    .select('id, departamento_id, fecha_entrada, fecha_salida')
+                    .or(`and(fecha_entrada.lte.${endStr},fecha_salida.gte.${startStr})`);
+
+                if (resError) throw resError;
+
+                setDepartments(depts || []);
+                setReservations(resData || []);
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchData();
     }, [currentDate]);
-
-    const fetchData = async () => {
-        setLoading(true);
-        try {
-            // 1. Fetch Departments
-            const { data: depts, error: deptError } = await supabase
-                .from('departamentos')
-                .select('id, nombre')
-                .order('nombre');
-
-            if (deptError) throw deptError;
-
-            // 2. Fetch Reservations for the selected month
-            // We need reservations that overlap with the month range.
-            // Overlap logic: (Start <= EndOfMonth) AND (End >= StartOfMonth)
-            const startStr = format(startOfMonth(currentDate), 'yyyy-MM-dd');
-            const endStr = format(endOfMonth(currentDate), 'yyyy-MM-dd');
-
-            const { data: resData, error: resError } = await supabase
-                .from('reservas')
-                .select('id, departamento_id, fecha_entrada, fecha_salida')
-                .or(`and(fecha_entrada.lte.${endStr},fecha_salida.gte.${startStr})`);
-
-            if (resError) throw resError;
-
-            setDepartments(depts || []);
-            setReservations(resData || []);
-        } catch (error) {
-            console.error('Error loading dashboard data:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const occupancyPercentage = useMemo(() => {
         if (!departments.length) return 0;

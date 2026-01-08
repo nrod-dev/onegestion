@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import StatusBadge from './StatusBadge';
@@ -22,11 +22,7 @@ const ReservationList = () => {
 
     const navigate = useNavigate();
 
-    useEffect(() => {
-        fetchReservations(page);
-    }, [page, dateFilter, upcomingFilter]);
-
-    const fetchReservations = async (currentPage) => {
+    const fetchReservations = useCallback(async (currentPage) => {
         setLoading(true);
         try {
             const from = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -63,7 +59,7 @@ const ReservationList = () => {
                 // Upcoming: Entry date > Today (starts tomorrow or later, basically not currently in progress/today)
                 // Request was: "reservas de fecha de entrada proxima pero que no esten en progreso"
                 // e.g. check-in > now()
-                const today = new Date().toISOString().split('T')[0];
+                const today = format(new Date(), 'yyyy-MM-dd');
                 query = query.gt('fecha_entrada', today);
 
                 // Sort by Nearest date first
@@ -95,7 +91,11 @@ const ReservationList = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [dateFilter, upcomingFilter]);
+
+    useEffect(() => {
+        fetchReservations(page);
+    }, [page, fetchReservations]);
 
     const handleDateFilterChange = (e) => {
         const { name, value } = e.target;
@@ -143,25 +143,25 @@ const ReservationList = () => {
             <div className="space-y-6">
                 {/* Header & Filters */}
                 <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <h3 className="text-2xl font-bold text-slate-900">Mis Reservas</h3>
                             <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
                                 {reservations.length}
                             </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
                             <button
                                 onClick={() => setUpcomingFilter(!upcomingFilter)}
                                 title="Ver próximas reservas"
-                                className={`p-2 rounded-lg transition-colors flex items-center gap-2 ${upcomingFilter ? 'bg-indigo-100 text-indigo-700 font-medium' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+                                className={`flex-1 sm:flex-none p-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${upcomingFilter ? 'bg-indigo-100 text-indigo-700 font-medium' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
                             >
-                                <Clock size={20} /> <span className="text-sm">Ver próximas reservas</span>
-                                {upcomingFilter}
+                                <Clock size={20} />
+                                <span className="text-sm">Ver próximas reservas</span>
                             </button>
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`p-2 rounded-lg transition-colors ${showFilters ? 'bg-brand-100 text-brand-600' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+                                className={`p-2 rounded-lg transition-colors shrink-0 ${showFilters ? 'bg-brand-100 text-brand-600' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
                             >
                                 <Filter size={20} />
                             </button>

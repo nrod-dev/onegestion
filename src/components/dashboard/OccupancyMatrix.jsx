@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { format, getDaysInMonth, getDate, isSameDay, parseISO } from 'date-fns';
+import { format, getDaysInMonth } from 'date-fns';
 
 const OccupancyMatrix = ({ currentDate, departments, reservations, className = '' }) => {
     const daysInMonth = useMemo(() => {
@@ -14,8 +14,8 @@ const OccupancyMatrix = ({ currentDate, departments, reservations, className = '
         const month = currentDate.getMonth();
 
         reservations.forEach(res => {
-            const start = parseISO(res.fecha_entrada);
-            const end = parseISO(res.fecha_salida);
+            // const start = parseISO(res.fecha_entrada);
+            // const end = parseISO(res.fecha_salida);
 
             // Iterate through days properly? 
             // Better: loop through each day of the month and check if it has a reservation?

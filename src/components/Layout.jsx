@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, CalendarSearch, PlusCircle, Building2, LogOut, Settings, Menu, X, Users, CalendarDays, Home } from 'lucide-react';
+import { LayoutDashboard, CalendarSearch, PlusCircle, Building2, LogOut, Settings, Menu, X, Users, CalendarDays, Home, DollarSign } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
 
+// eslint-disable-next-line no-unused-vars
 const NavItem = ({ to, icon: Icon, label, mobile, onClick }) => {
     const location = useLocation();
     const isActive = to ? location.pathname === to : false;
@@ -97,21 +98,20 @@ const Layout = () => {
 
                     <div className="flex-1 py-6 px-4 flex flex-col gap-2">
                         <Link
+                            to="/reports"
+                            onClick={() => setIsDrawerOpen(false)}
+                            className="flex items-center w-full gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                            <DollarSign size={20} className="text-brand-600" />
+                            <span className="font-medium">Reportes de ingresos</span>
+                        </Link>
+                        <Link
                             to="/guests"
                             onClick={() => setIsDrawerOpen(false)}
                             className="flex items-center w-full gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                         >
                             <Users size={20} className="text-brand-600" />
                             <span className="font-medium">Lista de Huespedes</span>
-                        </Link>
-
-                        <Link
-                            to="/settings"
-                            onClick={() => setIsDrawerOpen(false)}
-                            className="flex items-center w-full gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-                        >
-                            <Settings size={20} className="text-brand-600" />
-                            <span className="font-medium">Configuración</span>
                         </Link>
                     </div>
 
@@ -140,10 +140,12 @@ const Layout = () => {
                     <NavItem to="/reservations" icon={CalendarDays} label="Reservas" />
                     <NavItem to="/departments" icon={Building2} label="Departamentos" />
                     <NavItem to="/availability" icon={CalendarSearch} label="Disponibilidad" />
+
                 </div>
 
                 {/* Bottom Sidebar Items */}
                 <div className="p-3 border-t border-brand-800 gap-1 flex flex-col bg-brand-900">
+                    <NavItem to="/reports" icon={DollarSign} label="Reportes de ingresos" />
                     <NavItem to="/guests" icon={Users} label="Lista de Huespedes" />
                     <Link
                         to="/settings"
@@ -183,6 +185,7 @@ const Layout = () => {
                     <NavItem to="/new-reservation" icon={PlusCircle} label="Nueva" mobile />
                     <NavItem to="/departments" icon={Building2} label="Depto" mobile />
                     <NavItem to="/availability" icon={CalendarSearch} label="Disp" mobile />
+
                 </div>
             </div>
         </div>

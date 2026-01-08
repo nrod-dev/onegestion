@@ -12,34 +12,36 @@ const ChangeHistory = () => {
     const [selectedLog, setSelectedLog] = useState(null);
 
     useEffect(() => {
+        const fetchLogs = async () => {
+            setLoading(true);
+            try {
+                let query = supabase
+                    .from('audit_logs')
+                    .select('*')
+                    .order('changed_at', { ascending: false });
+
+                if (startDate) {
+                    const start = new Date(`${startDate}T00:00:00`);
+                    query = query.gte('changed_at', start.toISOString());
+                }
+                if (endDate) {
+                    const end = new Date(`${endDate}T23:59:59.999`);
+                    query = query.lte('changed_at', end.toISOString());
+                }
+
+                const { data, error } = await query;
+
+                if (error) throw error;
+                setLogs(data || []);
+            } catch (error) {
+                console.error('Error fetching audit logs:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchLogs();
     }, [startDate, endDate]);
-
-    const fetchLogs = async () => {
-        setLoading(true);
-        try {
-            let query = supabase
-                .from('audit_logs')
-                .select('*')
-                .order('changed_at', { ascending: false });
-
-            if (startDate) {
-                query = query.gte('changed_at', startOfDay(new Date(startDate)).toISOString());
-            }
-            if (endDate) {
-                query = query.lte('changed_at', endOfDay(new Date(endDate)).toISOString());
-            }
-
-            const { data, error } = await query;
-
-            if (error) throw error;
-            setLogs(data || []);
-        } catch (error) {
-            console.error('Error fetching audit logs:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const getActionBadge = (action) => {
         const styles = {

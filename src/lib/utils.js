@@ -1,3 +1,10 @@
+import { clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs) {
+    return twMerge(clsx(inputs))
+}
+
 /**
  * Parses a date string (YYYY-MM-DD) as a local date, avoiding timezone offsets.
  * @param {string} dateString - The date string to parse (e.g., "2023-11-25").

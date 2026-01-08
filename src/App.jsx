@@ -12,6 +12,7 @@ import GuestList from './components/GuestList';
 
 import Settings from './components/Settings';
 import ChangeHistory from './components/ChangeHistory';
+import FinancialReports from './components/financial/FinancialReports';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/history" element={<ChangeHistory />} />
               <Route path="/guests" element={<GuestList />} />
+              <Route path="/reports" element={<FinancialReports />} />
             </Route>
           </Route>
         </Routes>
