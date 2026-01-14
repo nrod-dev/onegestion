@@ -5,6 +5,7 @@ import StatusBadge from './StatusBadge';
 import ReservationCard from './ReservationCard';
 import { format, differenceInDays } from 'date-fns';
 import { Search, Calendar, ArrowRight, ChevronLeft, ChevronRight, User, Building2, Filter, X, Clock } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 import { dummyReservas } from '../lib/dummyData';
 import { parseDateLocal } from '../lib/utils';
@@ -12,6 +13,7 @@ import { parseDateLocal } from '../lib/utils';
 const ReservationList = () => {
     const [reservations, setReservations] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { addToast } = useToast();
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
     const [selectedReservation, setSelectedReservation] = useState(null);
@@ -134,7 +136,7 @@ const ReservationList = () => {
             setSelectedReservation(null);
         } catch (error) {
             console.error('Error deleting reservation:', error);
-            alert('Error al eliminar la reserva: ' + error.message);
+            addToast('Error al eliminar la reserva: ' + error.message, 'error');
         }
     };
 

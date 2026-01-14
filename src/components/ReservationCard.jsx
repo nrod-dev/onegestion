@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, Home, Calendar, Phone, MapPin, Car, CreditCard, User, Edit } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import StatusBadge from './StatusBadge';
 import { parseDateLocal } from '../lib/utils';
+import ConfirmModal from './ConfirmModal';
 
 const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
     if (!reservation) return null;
 
     const {
@@ -17,7 +20,8 @@ const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
         estado_pago,
         monto_total_pagar,
         monto_sena,
-        cant_huespedes
+        cant_huespedes,
+        moneda
     } = reservation;
 
     const checkIn = parseDateLocal(fecha_entrada);
@@ -25,10 +29,11 @@ const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
     const nights = differenceInDays(checkOut, checkIn);
 
     // Format currency
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('es-AR', {
+    // Format currency
+    const formatCurrency = (amount, currency = 'ARS') => {
+        return new Intl.NumberFormat(currency === 'USD' ? 'en-US' : 'es-AR', {
             style: 'currency',
-            currency: 'ARS',
+            currency: currency,
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
         }).format(amount || 0);
@@ -167,8 +172,8 @@ const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
                                             <CreditCard size={24} className="text-emerald-400" />
                                         </div>
                                         <div>
-                                            <p className="text-slate-400 text-xs">Monto Total</p>
-                                            <p className="text-2xl font-bold">{formatCurrency(monto_total_pagar)}</p>
+                                            <p className="text-slate-400 text-xs">Monto Total ({moneda || 'ARS'})</p>
+                                            <p className="text-2xl font-bold">{formatCurrency(monto_total_pagar, moneda)}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -179,7 +184,7 @@ const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
                                 {estado_pago === 'seña' && monto_sena && (
                                     <div className="mt-4 pt-4 border-t border-slate-800 flex justify-between text-sm">
                                         <span className="text-slate-400">Seña abonada:</span>
-                                        <span className="font-medium text-emerald-400">{formatCurrency(monto_sena)}</span>
+                                        <span className="font-medium text-emerald-400">{formatCurrency(monto_sena, moneda)}</span>
                                     </div>
                                 )}
                             </div>
@@ -199,11 +204,7 @@ const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
                         <button
                             type="button"
                             className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-50 text-base font-medium text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm items-center gap-2"
-                            onClick={() => {
-                                if (window.confirm('¿Estás seguro de que deseas eliminar esta reserva?')) {
-                                    onDelete && onDelete(reservation.id);
-                                }
-                            }}
+                            onClick={() => setShowDeleteConfirm(true)}
                         >
                             Eliminar
                         </button>
@@ -217,6 +218,20 @@ const ReservationCard = ({ reservation, onClose, onEdit, onDelete }) => {
                     </div>
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={() => {
+                    onDelete && onDelete(reservation.id);
+                    setShowDeleteConfirm(false);
+                }}
+                title="Eliminar Reserva"
+                message="¿Estás seguro de que deseas eliminar esta reserva? Esta acción no se puede deshacer."
+                confirmText="Eliminar"
+                cancelText="Cancelar"
+                isDangerous={true}
+            />
         </div>
 
     );

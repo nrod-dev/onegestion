@@ -5,7 +5,7 @@ import { es } from 'date-fns/locale';
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Sun, ArrowLeft, ArrowRight, DollarSign, Hotel, ArrowLeftRight, TrendingUp, BarChart3 } from "lucide-react"
+import { Calendar, Sun, ArrowLeft, ArrowRight, DollarSign, Banknote, Hotel, ArrowLeftRight, TrendingUp, BarChart3 } from "lucide-react"
 
 import KPICard from './KPICard';
 import IncomeChart from './IncomeChart';
@@ -21,10 +21,14 @@ const FinancialReports = () => {
 
     // Data
     const [metrics, setMetrics] = useState({
-        income: 0,
-        prevIncome: 0,
-        incomeChange: "0%",
-        incomeTrend: "neutral",
+        incomeARS: 0,
+        incomeUSD: 0,
+        prevIncomeARS: 0,
+        prevIncomeUSD: 0,
+        incomeARSChange: "0%",
+        incomeUSDChange: "0%",
+        incomeARSTrend: "neutral",
+        incomeUSDTrend: "neutral",
         reservations: 0,
         prevReservations: 0,
         resChange: "0%",
@@ -55,18 +59,24 @@ const FinancialReports = () => {
             // Main Period Queries
             const { data: mainReservations, error: mainError } = await supabase
                 .from('reservas')
-                .select('monto_total_pagar, fecha_entrada')
+                .select('monto_total_pagar, fecha_entrada, moneda')
                 .gte('fecha_entrada', format(start, 'yyyy-MM-dd'))
                 .lte('fecha_entrada', format(end, 'yyyy-MM-dd'));
 
             if (mainError) throw mainError;
 
-            // Calculate Metrics
-            const totalIncome = mainReservations.reduce((sum, r) => sum + (Number(r.monto_total_pagar) || 0), 0);
+            // Calculate Metrics by Currency
+            const totalIncomeARS = mainReservations
+                .filter(r => (r.moneda || 'ARS') === 'ARS')
+                .reduce((sum, r) => sum + (Number(r.monto_total_pagar) || 0), 0);
+            const totalIncomeUSD = mainReservations
+                .filter(r => r.moneda === 'USD')
+                .reduce((sum, r) => sum + (Number(r.monto_total_pagar) || 0), 0);
             const totalRes = mainReservations.length;
 
             // Comparison Data
-            let prevIncome = 0;
+            let prevIncomeARS = 0;
+            let prevIncomeUSD = 0;
             let prevRes = 0;
 
             if (isComparing) {
@@ -85,12 +95,17 @@ const FinancialReports = () => {
 
                 const { data: compReservations } = await supabase
                     .from('reservas')
-                    .select('monto_total_pagar')
+                    .select('monto_total_pagar, moneda')
                     .gte('fecha_entrada', format(compStart, 'yyyy-MM-dd'))
                     .lte('fecha_entrada', format(compEnd, 'yyyy-MM-dd'));
 
                 if (compReservations) {
-                    prevIncome = compReservations.reduce((sum, r) => sum + (Number(r.monto_total_pagar) || 0), 0);
+                    prevIncomeARS = compReservations
+                        .filter(r => (r.moneda || 'ARS') === 'ARS')
+                        .reduce((sum, r) => sum + (Number(r.monto_total_pagar) || 0), 0);
+                    prevIncomeUSD = compReservations
+                        .filter(r => r.moneda === 'USD')
+                        .reduce((sum, r) => sum + (Number(r.monto_total_pagar) || 0), 0);
                     prevRes = compReservations.length;
                 }
             }
@@ -107,14 +122,19 @@ const FinancialReports = () => {
                 };
             };
 
-            const incomeMetrics = calculateChange(totalIncome, prevIncome);
+            const incomeARSMetrics = calculateChange(totalIncomeARS, prevIncomeARS);
+            const incomeUSDMetrics = calculateChange(totalIncomeUSD, prevIncomeUSD);
             const resMetrics = calculateChange(totalRes, prevRes);
 
             setMetrics({
-                income: totalIncome,
-                prevIncome: isComparing ? prevIncome : undefined,
-                incomeChange: isComparing ? incomeMetrics.change : null,
-                incomeTrend: isComparing ? incomeMetrics.trend : null,
+                incomeARS: totalIncomeARS,
+                incomeUSD: totalIncomeUSD,
+                prevIncomeARS: isComparing ? prevIncomeARS : undefined,
+                prevIncomeUSD: isComparing ? prevIncomeUSD : undefined,
+                incomeARSChange: isComparing ? incomeARSMetrics.change : null,
+                incomeUSDChange: isComparing ? incomeUSDMetrics.change : null,
+                incomeARSTrend: isComparing ? incomeARSMetrics.trend : null,
+                incomeUSDTrend: isComparing ? incomeUSDMetrics.trend : null,
                 reservations: totalRes,
                 prevReservations: isComparing ? prevRes : undefined,
                 resChange: isComparing ? resMetrics.change : null,
@@ -410,7 +430,7 @@ const FinancialReports = () => {
         return format(comparisonDate, 'MMMM yyyy', { locale: es });
     };
 
-    const formatCurrency = (val) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(val);
+    const formatCurrency = (val, currency = 'ARS') => new Intl.NumberFormat('es-AR', { style: 'currency', currency: currency, maximumFractionDigits: 0 }).format(val);
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -597,19 +617,32 @@ const FinancialReports = () => {
             </div>
 
             {/* KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <KPICard
-                    title="Ingresos Totales"
-                    value={formatCurrency(metrics.income)}
-                    valueFull={metrics.income.toString()}
-                    change={metrics.incomeChange}
-                    trend={metrics.incomeTrend}
+                    title="Ingresos en Pesos"
+                    value={formatCurrency(metrics.incomeARS, 'ARS')}
+                    valueFull={metrics.incomeARS.toString()}
+                    change={metrics.incomeARSChange}
+                    trend={metrics.incomeARSTrend}
                     icon={DollarSign}
                     description={isComparing
                         ? `vs ${getComparisonLabel().charAt(0).toUpperCase() + getComparisonLabel().slice(1)}`
                         : getMainPeriodLabel().charAt(0).toUpperCase() + getMainPeriodLabel().slice(1)
                     }
-                    compareValue={isComparing ? formatCurrency(metrics.prevIncome || 0) : undefined}
+                    compareValue={isComparing ? formatCurrency(metrics.prevIncomeARS || 0, 'ARS') : undefined}
+                />
+                <KPICard
+                    title="Ingresos en Dólares"
+                    value={formatCurrency(metrics.incomeUSD, 'USD')}
+                    valueFull={metrics.incomeUSD.toString()}
+                    change={metrics.incomeUSDChange}
+                    trend={metrics.incomeUSDTrend}
+                    icon={Banknote}
+                    description={isComparing
+                        ? `vs ${getComparisonLabel().charAt(0).toUpperCase() + getComparisonLabel().slice(1)}`
+                        : getMainPeriodLabel().charAt(0).toUpperCase() + getMainPeriodLabel().slice(1)
+                    }
+                    compareValue={isComparing ? formatCurrency(metrics.prevIncomeUSD || 0, 'USD') : undefined}
                 />
                 <KPICard
                     title="Reservas"
